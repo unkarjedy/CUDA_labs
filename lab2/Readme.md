@@ -1,6 +1,7 @@
 ###Task
 https://docs.google.com/viewer?a=v&pid=sites&srcid=ZGVmYXVsdGRvbWFpbnxwcmltYXRjdWRhfGd4OjczZWE5MmFkZjk1N2EyZGI
 
-### getInput.py usage
-python genInput  M N > file
-N must be odd
+### genInput.py usage
+genInput.py script generates input data formated according to Task <br/>
+python genInput  M N > file <br/>
+N must be odd <br/>
