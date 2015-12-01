@@ -2,6 +2,14 @@
 typedef int DataType;
 
 #include <iostream>
+#include <ostream>
+
+struct STiming {
+    float method1;
+    float method2;
+};
+
+void generateInput(std::ostream &out, size_t gridSize, size_t kernelSize);
 
 // Forward declarations
 void readGrid(

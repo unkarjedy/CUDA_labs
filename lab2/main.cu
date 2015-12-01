@@ -13,15 +13,78 @@
 
 using namespace std;
 
+STiming MesureMethodsTimings(istream &input, bool saveOutput = false);
+int RunSimpleProgram(int argc, char ** argv);
+int RunMesurings();
+
 
 int main(int argc, char *argv[])
 {
-    string filename = argc > 1 
-        ? argv[1] 
-        : "input.txt";
+    int rc = 0;
+    if (argc > 1 && string(argv[1]) == "-t") {
+        rc = RunMesurings();
+    }
+    else {
+        rc = RunSimpleProgram(argc, argv);
+    }
+
+    //cin.get();
+    return rc;
+}
+
+
+/*
+* 1. Reads input from input.txt or specified file as first argument
+* 2. Runs stwo methods for convultion prints result matrxi to outputGlob.txt, outputShared.txt
+* 3. Prints timings for both methods
+*/
+int RunSimpleProgram(int argc, char ** argv)
+{
+    string filename = argc > 1
+        ? argv[1] : "input.txt";
 
     fstream input(filename);
-    fstream output("output.txt", fstream::out);
+    if (!input.is_open()){
+        cerr << "File not found: " << filename << endl;
+        return -1;
+    }
+
+    STiming timing = MesureMethodsTimings(input, true);
+    cout << "Global: " << timing.method1 << endl;
+    cout << "Shared: " << timing.method2;
+    return 0;
+}
+
+
+/*
+* Generate input data for different grid and kernel sizes, 
+* mesures times for both methods and prints result
+*/
+int RunMesurings()
+{
+    for (size_t kernelSize = 3; kernelSize <= 9; kernelSize += 2){
+        for (size_t gridSize = 10; gridSize <= 1000; gridSize *= 10) {
+            stringstream input;
+            generateInput(input, gridSize, kernelSize);
+            STiming timing = MesureMethodsTimings(input);
+
+            cout << "N: " << gridSize << endl;
+            cout << "M: " << kernelSize << endl;
+            cout << "Global: " << timing.method1 << endl;
+            cout << "Shared: " << timing.method2 << endl;
+        }
+    }
+    return 0;
+}
+
+
+
+STiming MesureMethodsTimings(istream &input, bool saveOutput /*= false*/)
+{
+    STiming timing;
+
+    fstream outputShared("outputGlobal.txt", fstream::out);
+    fstream outputGlobal("outputShared.txt", fstream::out);
 
     size_t gridSizeFromInput;       // matrix square side size
     size_t kernelSize;              // convolution kernel matrix square side size
@@ -49,9 +112,9 @@ int main(int argc, char *argv[])
     size_t gridDataSize = sizeof(DataType)* haloGridSize * haloGridSize; // with halo rows and columns
     size_t kernDataSize = sizeof(DataType)* kernelSize * kernelSize;
 
-    h_Grid      = (DataType*)malloc(gridDataSize);
+    h_Grid = (DataType*)malloc(gridDataSize);
     h_GridCheck = (DataType*)malloc(gridDataSize);
-    h_Kern      = (DataType*)malloc(kernDataSize);
+    h_Kern = (DataType*)malloc(kernDataSize);
     cudaMalloc(&d_Grid, gridDataSize);
     cudaMalloc(&d_GridNew, gridDataSize);
 
@@ -70,7 +133,7 @@ int main(int argc, char *argv[])
     // Calculate block/grid dimensions
     dim3 cudaBlockDim(CUDA_BLOCK_SIZE, CUDA_BLOCK_SIZE, 1);
     // actually gridSize is already multiple of CUDA_BLOCK_SIZE, but...
-    size_t cudaGridSize = (size_t)ceil(gridSize / (float)CUDA_BLOCK_SIZE); 
+    size_t cudaGridSize = (size_t)ceil(gridSize / (float)CUDA_BLOCK_SIZE);
     dim3 cudaGridDim(cudaGridSize, cudaGridSize, 1);
 
 
@@ -88,7 +151,7 @@ int main(int argc, char *argv[])
             kernelSize);
     }
     timer.stop();
-    cout << timer.getTime() / atemps << endl;
+    timing.method1 = timer.getTime() / atemps;
     cudaMemcpy(h_Grid, d_GridNew, gridDataSize, cudaMemcpyDeviceToHost);
 
     size_t sharedSide = CUDA_BLOCK_SIZE + 2 * kernelRadius;
@@ -101,22 +164,33 @@ int main(int argc, char *argv[])
             kernelSize);
     }
     timer.stop();
-    cout << timer.getTime() / atemps << endl;
+    timing.method2 = timer.getTime() / atemps;
     cudaMemcpy(h_GridCheck, d_GridNew, gridDataSize, cudaMemcpyDeviceToHost);
 
 
     // Check if both methods generate equal results
-    areGridsEqual(h_Grid, h_GridCheck, haloGridSize)
-        ? cout << "Both methods generate equal results." << endl
-        : cout << "Error: methods generate DIFFERENT results." << endl;
+    if (areGridsEqual(h_Grid, h_GridCheck, haloGridSize)){
+        cout << "Both methods generate equal results." << endl;
+    }
+    else {
+        cout << "Error: methods generate DIFFERENT results." << endl;
+    }
 
 
     // Print result
-    printGridCustomBorders(
-        h_Grid, output,
-        haloGridSize,
-        kernelRadius, kernelRadius + gridSizeFromInput,
-        kernelRadius, kernelRadius + gridSizeFromInput);
+    if (saveOutput){
+        printGridCustomBorders(
+            h_Grid, outputShared,
+            haloGridSize,
+            kernelRadius, kernelRadius + gridSizeFromInput,
+            kernelRadius, kernelRadius + gridSizeFromInput);
+        printGridCustomBorders(
+            h_GridCheck, outputGlobal,
+            haloGridSize,
+            kernelRadius, kernelRadius + gridSizeFromInput,
+            kernelRadius, kernelRadius + gridSizeFromInput);
+    }
+    
 
     // Release memory
     free(h_GridCheck);
@@ -124,7 +198,6 @@ int main(int argc, char *argv[])
     cudaFree(d_Grid);
     free(h_Kern);
     free(h_Grid);
-    
-    cin.get();
-    return 0;
+
+    return timing;
 }

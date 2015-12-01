@@ -1,5 +1,28 @@
 #include "commons.hpp"
+
+#include <ctime>
 using namespace std;
+
+const float MY_MAX_FLOAT = 100;
+
+void generateInput(ostream &out, size_t gridSize, size_t kernelSize)
+{
+    out << gridSize << " " << kernelSize << endl;
+    srand(static_cast <unsigned> (time(0)));
+
+    for (int row = 0; row < gridSize; row++){
+        for (int col = 0; col < gridSize; col++){
+            out << MY_MAX_FLOAT * (rand() / (float)RAND_MAX) << " ";
+        }
+        out << endl;
+    }
+    for (int row = 0; row < kernelSize; row++){
+        for (int col = 0; col < kernelSize; col++){
+            out << MY_MAX_FLOAT * (rand() / (float)RAND_MAX) << " ";
+        }
+        out << endl;
+    }
+}
 
 void readGrid(
     DataType* hostGrid,
