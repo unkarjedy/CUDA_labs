@@ -103,6 +103,7 @@ __global__ void convultionSharedMemory(
     idx = threadIdx.x;
     idy = threadIdx.y;
 
+    __syncthreads();
     DataType convSum = 0;
     for (int kRow = 0; kRow < kernSize; kRow++) {
         for (int kCol = 0; kCol < kernSize; kCol++) {
