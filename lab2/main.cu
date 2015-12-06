@@ -57,7 +57,7 @@ int RunSimpleProgram(int argc, char ** argv)
 
 
 /*
-* Generate input data for different grid and kernel sizes, 
+* Generate input data for different grid and kernel sizes,
 * mesures times for both methods and prints result
 */
 int RunMesurings()
@@ -180,17 +180,17 @@ STiming MesureMethodsTimings(istream &input, bool saveOutput /*= false*/)
     // Print result
     if (saveOutput){
         printGridCustomBorders(
-            h_Grid, outputShared,
+            h_Grid, outputGlobal,
             haloGridSize,
             kernelRadius, kernelRadius + gridSizeFromInput,
             kernelRadius, kernelRadius + gridSizeFromInput);
         printGridCustomBorders(
-            h_GridCheck, outputGlobal,
+            h_GridCheck, outputShared,
             haloGridSize,
             kernelRadius, kernelRadius + gridSizeFromInput,
             kernelRadius, kernelRadius + gridSizeFromInput);
     }
-    
+
 
     // Release memory
     free(h_GridCheck);
