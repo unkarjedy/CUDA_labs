@@ -110,10 +110,10 @@ __host__ void radixSortCore(unsigned int* const d_inputVals,
         cudaMemcpy(d_outputVals, currentOutput, dataSize, cudaMemcpyDeviceToDevice);
     }
 
-    checkCudaErrors(cudaFree(predicate));
-    checkCudaErrors(cudaFree(predicateTrueScan));
-    checkCudaErrors(cudaFree(predicateFalseScan));
-    checkCudaErrors(cudaFree(blockSums));
+    cudaFree(predicate);
+    cudaFree(predicateTrueScan);
+    cudaFree(predicateFalseScan);
+    cudaFree(blockSums);
 }
 
 
