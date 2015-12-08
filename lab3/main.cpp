@@ -34,8 +34,6 @@ int main(int argc, char *argv[])
         return -2;
     }
 
-    // TODO: check for max arraySize
-
     auto h_data = shared_ptr<unsigned>(new unsigned[arraySize]);
     
     readArray(h_data.get(), input, arraySize);
